@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpendSmart — Sign In</title>
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <div class="auth-page">
+
+    <!-- Decorative background blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="auth-card">
+
+      <!-- Brand -->
+      <div class="auth-brand">
+        <span class="auth-logo">💳</span>
+        <span class="auth-title">SpendSmart</span>
+      </div>
+      <p class="auth-tagline">Track smarter. Save better.</p>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab"  data-tab="login">Sign In</button>
+        <button class="auth-tab"        id="registerTab" data-tab="register">Create Account</button>
+      </div>
+
+      <!-- Error / Success -->
+      <div class="auth-alert error"   id="authError"  style="display:none"></div>
+      <div class="auth-alert success" id="authSuccess" style="display:none"></div>
+
+      <!-- ── LOGIN FORM ── -->
+      <form class="auth-form" id="loginForm">
+        <div class="auth-field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div class="auth-field">
+          <label for="loginPassword">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+            <button type="button" class="pw-toggle" data-target="loginPassword">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-auth" id="loginBtn">
+          <span class="btn-auth-text">Sign In</span>
+          <span class="btn-auth-spinner" style="display:none">⏳</span>
+        </button>
+        <p class="auth-switch">Don't have an account? <a href="#" id="toRegister">Create one</a></p>
+      </form>
+
+      <!-- ── REGISTER FORM ── -->
+      <form class="auth-form" id="registerForm" style="display:none">
+        <div class="auth-field">
+          <label for="regName">Full Name</label>
+          <input type="text" id="regName" placeholder="John Doe" autocomplete="name" required />
+        </div>
+        <div class="auth-field">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div class="auth-field">
+          <label for="regPassword">Password <span class="hint">(min 6 chars)</span></label>
+          <div class="pw-wrap">
+            <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password" required />
+            <button type="button" class="pw-toggle" data-target="regPassword">👁</button>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="regConfirm">Confirm Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="regConfirm" placeholder="••••••••" autocomplete="new-password" required />
+            <button type="button" class="pw-toggle" data-target="regConfirm">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-auth" id="registerBtn">
+          <span class="btn-auth-text">Create Account</span>
+          <span class="btn-auth-spinner" style="display:none">⏳</span>
+        </button>
+        <p class="auth-switch">Already have an account? <a href="#" id="toLogin">Sign in</a></p>
+      </form>
+
+    </div><!-- /auth-card -->
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

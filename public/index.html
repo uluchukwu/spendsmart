@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpendSmart — Expense Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ══ TOAST CONTAINER ══════════════════════════════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ══ HEADER ══════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">💳</span>
+        <span class="brand-name">SpendSmart</span>
+      </div>
+
+      <!-- Currency Toggle -->
+      <div class="currency-toggle">
+        <button class="cur-btn active" data-cur="GBP">£ GBP</button>
+        <button class="cur-btn"        data-cur="NGN">₦ NGN</button>
+      </div>
+
+      <!-- Header right: export, budget, user menu -->
+      <div class="header-right">
+        <div class="export-btns">
+          <button class="btn-export" id="exportCsvBtn" title="Download CSV">📥 CSV</button>
+          <button class="btn-export" id="exportPdfBtn" title="Download PDF">📄 PDF</button>
+        </div>
+        <button class="btn-budget-manage" id="openBudgetBtn" title="Manage Budget Goals">🎯 Budgets</button>
+        <div class="user-menu-wrap">
+          <button class="user-menu-btn" id="userMenuBtn">
+            <span class="user-avatar" id="userAvatar">?</span>
+            <span class="user-name"   id="userName">Loading…</span>
+            <span class="user-caret">▾</span>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="user-dropdown-info">
+              <strong id="dropdownName">—</strong>
+              <span   id="dropdownEmail">—</span>
+            </div>
+            <div class="user-dropdown-divider"></div>
+            <button class="user-dropdown-item danger" id="logoutBtn">🚪 Sign Out</button>
+          </div>
+        </div>
+        <button class="btn-add-top" id="openModalBtn">+ Add Expense</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ MONTHLY CAP WARNING BANNER ════════════════════════ -->
+  <div class="cap-banner" id="capBanner" style="display:none">
+    <span class="cap-banner-icon" id="capBannerIcon">⚠️</span>
+    <div class="cap-banner-info">
+      <strong id="capBannerTitle">Monthly cap warning</strong>
+      <span id="capBannerMsg"></span>
+    </div>
+    <div class="cap-banner-right">
+      <div class="cap-banner-bar-wrap">
+        <div class="cap-banner-bar" id="capBannerBar"></div>
+      </div>
+      <span class="cap-banner-pct" id="capBannerPct"></span>
+    </div>
+    <button class="cap-banner-close" id="capBannerClose" title="Dismiss">✕</button>
+  </div>
+
+  <!-- ══ MAIN ════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- Period Tabs -->
+    <div class="tabs-row">
+      <button class="tab active" data-period="day">Today</button>
+      <button class="tab" data-period="week">This Week</button>
+      <button class="tab" data-period="month">This Month</button>
+      <button class="tab" data-period="all">All Time</button>
+    </div>
+
+    <!-- Exchange Rate Bar -->
+    <div class="rate-bar" id="rateBar">
+      <span class="rate-icon">💱</span>
+      <div class="rate-info">
+        <span class="rate-pair">1 GBP =</span>
+        <span class="rate-num" id="rateValue">—</span>
+        <span class="rate-pair">NGN</span>
+        <span class="rate-sep">·</span>
+        <span class="rate-updated">
+          <span class="rate-dot fetching" id="rateDot"></span>
+          <span id="rateStatus">Fetching live rate…</span>
+        </span>
+      </div>
+      <div class="rate-actions">
+        <button class="rate-btn" id="refreshRateBtn">↻ Refresh</button>
+        <button class="rate-btn" id="customRateBtn">✎ Custom</button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <section class="summary-cards">
+      <div class="card card-total">
+        <p class="card-label">Total Spent</p>
+        <p class="card-value" id="totalSpent">—</p>
+        <p class="card-alt"   id="totalSpentAlt"></p>
+        <p class="card-sub"   id="txCount">0 transactions</p>
+      </div>
+      <div class="card card-avg">
+        <p class="card-label">Daily Average</p>
+        <p class="card-value" id="dailyAvg">—</p>
+        <p class="card-alt"   id="dailyAvgAlt"></p>
+        <p class="card-sub">per day this period</p>
+      </div>
+      <div class="card card-top">
+        <p class="card-label">Biggest Expense</p>
+        <p class="card-value" id="biggestExp">—</p>
+        <p class="card-alt"   id="biggestExpAlt"></p>
+        <p class="card-sub"   id="biggestName">—</p>
+      </div>
+    </section>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+
+      <!-- ── Expense List Panel ── -->
+      <section class="panel expenses-panel">
+        <div class="panel-header">
+          <h2>Expenses</h2>
+          <div class="search-wrap">
+            <input type="text" id="searchInput" placeholder="Search…" />
+          </div>
+        </div>
+        <div class="filter-row">
+          <select id="categoryFilter">
+            <option value="all">All Categories</option>
+            <option value="Food">Food &amp; Drinks</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Health">Health</option>
+            <option value="Bills">Bills &amp; Utilities</option>
+            <option value="Education">Education</option>
+            <option value="Others">Others</option>
+          </select>
+          <select id="sortSelect">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="amount-desc">Highest Amount</option>
+            <option value="amount-asc">Lowest Amount</option>
+          </select>
+        </div>
+        <div class="expense-list" id="expenseList">
+          <div class="empty-state" id="emptyState">
+            <span class="empty-icon">🧾</span>
+            <p>No expenses yet for this period.</p>
+            <p class="empty-sub">Click <strong>+ Add Expense</strong> to get started.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Sidebar ── -->
+      <aside class="sidebar">
+
+        <!-- Budget Goals Panel -->
+        <div class="panel budget-panel">
+          <div class="budget-panel-header">
+            <h2>🎯 Budget Goals</h2>
+            <span class="budget-month" id="budgetMonthLabel"></span>
+          </div>
+          <div id="capSidebarSection"></div>
+          <div id="budgetList" class="budget-list">
+            <p class="budget-empty">No budgets set. Click <strong>🎯 Budgets</strong> to add goals.</p>
+          </div>
+        </div>
+
+        <!-- Quick Converter -->
+        <div class="panel converter-panel">
+          <h2>🔄 Quick Converter</h2>
+          <div class="converter-body">
+            <div class="conv-field">
+              <label class="conv-label"><span class="conv-flag">🇬🇧</span> British Pounds (£)</label>
+              <div class="conv-input-wrap">
+                <span class="conv-sym">£</span>
+                <input type="number" id="convGBP" placeholder="0.00" min="0" step="0.01" />
+              </div>
+            </div>
+            <div class="conv-swap-row">
+              <div class="conv-line"></div>
+              <button class="conv-swap-btn" id="convSwapBtn">⇅</button>
+              <div class="conv-line"></div>
+            </div>
+            <div class="conv-field">
+              <label class="conv-label"><span class="conv-flag">🇳🇬</span> Nigerian Naira (₦)</label>
+              <div class="conv-input-wrap">
+                <span class="conv-sym">₦</span>
+                <input type="number" id="convNGN" placeholder="0.00" min="0" step="0.01" />
+              </div>
+            </div>
+            <p class="conv-rate-note" id="convRateNote">Rate: loading…</p>
+          </div>
+        </div>
+
+        <!-- Category Chart -->
+        <div class="panel chart-panel">
+          <h2>Category Breakdown</h2>
+          <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+          <div class="chart-empty" id="chartEmpty">No data to display</div>
+        </div>
+
+        <!-- Money Tips -->
+        <div class="panel tips-panel">
+          <h2>💡 Money Management Tips</h2>
+          <div id="tipsList" class="tips-list"></div>
+          <button class="btn-tip-refresh" id="refreshTip">Refresh Tips</button>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+
+  <!-- ══ ADD / EDIT EXPENSE MODAL ═════════════════════════ -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal modal-form">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Expense</h3>
+        <button class="modal-close" id="closeModalBtn">✕</button>
+      </div>
+      <form id="expenseForm" class="modal-body" novalidate>
+        <input type="hidden" id="editId" />
+        <div class="form-group">
+          <label for="itemName">Description / Shop Name</label>
+          <input type="text" id="itemName" placeholder="e.g. Tesco Weekly Shop" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+              <option value="">Select…</option>
+              <option value="Food">Food &amp; Drinks</option>
+              <option value="Transport">Transport</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Health">Health</option>
+              <option value="Bills">Bills &amp; Utilities</option>
+              <option value="Education">Education</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="expDate">Date</label>
+            <input type="date" id="expDate" required />
+          </div>
+        </div>
+        <div class="form-group itemized-toggle-row">
+          <label class="toggle-row-label">
+            <div class="toggle-switch">
+              <input type="checkbox" id="itemizedToggle" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </div>
+            <span class="toggle-text">Add itemized list of purchases</span>
+          </label>
+        </div>
+        <!-- Simple amount -->
+        <div id="simpleAmountSection">
+          <div class="form-group">
+            <label for="amount">Amount <span class="amount-cur-badge">£ GBP</span></label>
+            <div class="amount-input-wrap">
+              <span class="amount-sym">£</span>
+              <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <p class="amount-converted" id="amountConverted"></p>
+          </div>
+        </div>
+        <!-- Itemized section -->
+        <div id="itemizedSection">
+          <div class="items-table-head">
+            <span class="ith-name">Item Name</span>
+            <span class="ith-qty">Qty</span>
+            <span class="ith-price">Unit £</span>
+            <span class="ith-sub">Subtotal</span>
+            <span class="ith-del"></span>
+          </div>
+          <div class="items-rows-container" id="itemRowsContainer"></div>
+          <button type="button" class="btn-add-item-row" id="addItemRowBtn">+ Add Item</button>
+          <div class="items-grand-total">
+            <span class="igt-label">Grand Total</span>
+            <div class="igt-values">
+              <span class="igt-main" id="itemsGrandTotal">£0.00</span>
+              <span class="igt-alt"  id="itemsGrandTotalNgn">≈ ₦0.00</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes <span class="optional">(optional)</span></label>
+          <input type="text" id="notes" placeholder="Any extra details…" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn-save"   id="saveBtn">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ EXPENSE DETAIL MODAL ════════════════════════════ -->
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal modal-detail">
+      <div class="detail-header">
+        <div class="detail-header-left">
+          <div class="detail-cat-icon" id="detailCatIcon">🍔</div>
+          <div class="detail-header-text">
+            <h3 id="detailName">—</h3>
+            <div class="detail-meta">
+              <span class="exp-category" id="detailCategoryBadge"></span>
+              <span class="detail-date"  id="detailDate">—</span>
+            </div>
+          </div>
+        </div>
+        <button class="modal-close" id="closeDetailBtn">✕</button>
+      </div>
+      <div class="detail-body">
+        <p class="detail-notes" id="detailNotes"></p>
+        <div id="detailItemsSection">
+          <table class="detail-items-table">
+            <thead>
+              <tr>
+                <th class="di-name">Item</th>
+                <th class="di-qty">Qty</th>
+                <th class="di-price">Unit Price</th>
+                <th class="di-sub">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="detailItemsBody"></tbody>
+          </table>
+          <div class="detail-items-footer">
+            <span class="detail-item-count" id="detailItemCount"></span>
+            <div class="detail-totals">
+              <div class="detail-total-row">
+                <span class="dtr-label">Total</span>
+                <span class="dtr-main" id="detailTotal">—</span>
+              </div>
+              <div class="detail-total-row detail-total-alt-row">
+                <span></span>
+                <span class="dtr-alt" id="detailTotalAlt"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-simple" id="detailSimpleSection">
+          <div class="detail-simple-row">
+            <span class="dtr-label">Amount</span>
+            <div>
+              <div class="dtr-main" id="detailSimpleMain">—</div>
+              <div class="dtr-alt"  id="detailSimpleAlt"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-footer">
+        <button class="btn-detail-edit"   id="detailEditBtn">✏️ Edit</button>
+        <button class="btn-detail-delete" id="detailDeleteBtn">🗑️ Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BUDGET MANAGEMENT MODAL ══════════════════════════ -->
+  <div class="modal-overlay" id="budgetOverlay">
+    <div class="modal modal-budget">
+      <div class="modal-header">
+        <h3>🎯 Monthly Budget Goals</h3>
+        <button class="modal-close" id="closeBudgetBtn">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- ── Total Monthly Cap ── -->
+        <div class="cap-modal-section">
+          <h4 class="cap-modal-title">💰 Total Monthly Spending Cap</h4>
+          <p class="cap-modal-desc">A hard limit on all your monthly spending combined. You'll be warned at 80% and alerted when you exceed it.</p>
+          <div class="cap-modal-row">
+            <div class="budget-amount-wrap">
+              <span class="budget-sym">£</span>
+              <input type="number" id="capLimitInput" placeholder="e.g. 1000.00" min="1" step="0.01" />
+            </div>
+            <button class="btn-budget-add" id="saveCapBtn">Set Cap</button>
+            <button class="btn-cap-remove" id="removeCapBtn" style="display:none">Remove</button>
+          </div>
+          <p class="cap-modal-status" id="capModalStatus"></p>
+        </div>
+        <hr class="cap-modal-divider" />
+
+        <p class="budget-modal-desc">Set monthly spending limits per category. You'll be alerted when you're close to or over a limit.</p>
+        <div class="budget-form-row">
+          <select id="budgetCategorySelect">
+            <option value="">Select category…</option>
+            <option value="Food">Food &amp; Drinks</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Health">Health</option>
+            <option value="Bills">Bills &amp; Utilities</option>
+            <option value="Education">Education</option>
+            <option value="Others">Others</option>
+          </select>
+          <div class="budget-amount-wrap">
+            <span class="budget-sym">£</span>
+            <input type="number" id="budgetLimitInput" placeholder="Monthly limit" min="1" step="0.01" />
+          </div>
+          <button class="btn-budget-add" id="addBudgetBtn">Set</button>
+        </div>
+        <div id="budgetModalList" class="budget-modal-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DELETE MODAL ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Delete Expense</h3>
+        <button class="modal-close" id="closeDeleteBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteItemName"></strong>?</p>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
+          <button type="button" class="btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CUSTOM RATE MODAL ════════════════════════════════ -->
+  <div class="modal-overlay" id="customRateOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>✎ Set Custom Rate</h3>
+        <button class="modal-close" id="closeCustomRateBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="custom-rate-desc">Override the live rate with your own value.</p>
+        <div class="form-group" style="margin-top:14px">
+          <label for="customRateInput">1 GBP = ? NGN</label>
+          <input type="number" id="customRateInput" placeholder="e.g. 2050.00" min="1" step="0.01" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="cancelCustomRateBtn">Cancel</button>
+          <button type="button" class="btn-save"   id="applyCustomRateBtn">Apply</button>
+        </div>
+        <button class="btn-restore-live" id="restoreLiveRateBtn">↻ Restore Live Rate</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
