@@ -1,58 +1,56 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import * as authApi from '../api/auth.js';
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { getMe, loginUser, registerUser, logoutUser } from '../api/authApi.js';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ss_user')); } catch { return null; }
-  });
-  const [token,   setToken]   = useState(() => localStorage.getItem('ss_token') || null);
+  const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
+  const logoutRef = useRef(null);
 
-  // Verify token on mount
+  // Expose logout to the axios interceptor for 401 handling
   useEffect(() => {
-    if (!token) { setLoading(false); return; }
-    authApi.getMe()
-      .then(data => { setUser(data.user); localStorage.setItem('ss_user', JSON.stringify(data.user)); })
-      .catch(() => { logout(); })
+    window.__authLogout = () => setUser(null);
+    return () => { delete window.__authLogout; };
+  }, []);
+
+  // Restore session from cookie on mount
+  useEffect(() => {
+    getMe()
+      .then(setUser)
+      .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, []); // eslint-disable-line
+  }, []);
 
   const login = useCallback(async (email, password) => {
-    const data = await authApi.login(email, password);
-    localStorage.setItem('ss_token', data.token);
-    localStorage.setItem('ss_user',  JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+    const userData = await loginUser({ email, password });
+    setUser(userData);
+    return userData;
   }, []);
 
   const register = useCallback(async (name, email, password) => {
-    const data = await authApi.register(name, email, password);
-    localStorage.setItem('ss_token', data.token);
-    localStorage.setItem('ss_user',  JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+    const userData = await registerUser({ name, email, password });
+    setUser(userData);
+    return userData;
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('ss_token');
-    localStorage.removeItem('ss_user');
-    setToken(null);
+  const logout = useCallback(async () => {
+    try { await logoutUser(); } catch { /* ignore */ }
     setUser(null);
   }, []);
 
+  logoutRef.current = logout;
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!user,
+    }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
 }

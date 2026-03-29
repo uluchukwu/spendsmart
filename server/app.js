@@ -7,6 +7,7 @@ const rateLimit    = require('express-rate-limit');
 
 const authRoutes        = require('./routes/authRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const budgetRoutes      = require('./routes/budgets');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -23,8 +24,12 @@ app.use(helmet({
   },
 }));
 
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.CLIENT_ORIGIN]
+  : [/^http:\/\/localhost:\d+$/];   // allow ANY localhost port in development
+
 app.use(cors({
-  origin:      process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  origin:      allowedOrigins,
   credentials: true,
 }));
 
@@ -47,6 +52,7 @@ const authLimiter = rateLimit({
 // ── API Routes ─────────────────────────────────────────────
 app.use('/api/auth',         authLimiter, authRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/budgets',      budgetRoutes);
 
 // ── Error handling ─────────────────────────────────────────
 app.use(notFound);

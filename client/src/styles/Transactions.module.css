@@ -1,0 +1,28 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+
+.pageHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pageTitle   { font-size: 1.6rem; font-weight: 700; }
+.pageSubtitle { color: var(--muted); font-size: .88rem; margin-top: 2px; }
+
+.addBtn {
+  background: var(--accent); color: #fff; border: none; border-radius: 10px;
+  padding: 10px 18px; font-size: .9rem; font-weight: 600; white-space: nowrap;
+  transition: opacity .15s;
+}
+.addBtn:hover { opacity: .88; }
+
+/* Floating action button (mobile) */
+.fab {
+  display: none;
+  position: fixed; bottom: 24px; right: 24px; z-index: 99;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 1.6rem; line-height: 1; box-shadow: 0 4px 16px rgba(108,99,255,.5);
+  transition: transform .15s;
+}
+.fab:hover { transform: scale(1.08); }
+
+@media (max-width: 600px) {
+  .addBtn { display: none; }
+  .fab    { display: flex; align-items: center; justify-content: center; }
+}

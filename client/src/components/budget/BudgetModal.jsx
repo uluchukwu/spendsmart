@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Modal from '../common/Modal.jsx';
-import { CATEGORIES, CATEGORY_ICONS } from '../../utils/constants.js';
+import { EXPENSE_CATEGORIES, CATEGORY_ICONS, CATEGORY_LABELS } from '../../utils/constants.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 export default function BudgetModal({ open, onClose, budgets, monthlyCap, onUpsert, onDelete, onSaveCap }) {
@@ -78,11 +78,11 @@ export default function BudgetModal({ open, onClose, budgets, monthlyCap, onUpse
       {/* Per-category budgets */}
       <div className="budget-section-title">📊 Category Budgets (monthly)</div>
       <div className="cat-budget-list">
-        {CATEGORIES.map(cat => {
+        {EXPENSE_CATEGORIES.map(cat => {
           const existing = budgets.find(b => b.category === cat);
           return (
             <div key={cat} className="cat-budget-row">
-              <span className="cat-budget-label">{CATEGORY_ICONS[cat]} {cat}</span>
+              <span className="cat-budget-label">{CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}</span>
               <input
                 type="number" min="0" step="0.01"
                 placeholder={existing ? `£${existing.monthlyLimit}` : 'No limit'}

@@ -1,0 +1,32 @@
+.form { display: flex; flex-direction: column; gap: 0; }
+
+.typeToggle { display: flex; gap: 6px; margin-bottom: 18px; }
+.typeLabel {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px; border-radius: 9px; border: 1px solid var(--border);
+  cursor: pointer; font-size: .88rem; font-weight: 600; color: var(--muted);
+  transition: all .15s;
+}
+.typeLabel input[type="radio"] { display: none; }
+.typeActive { border-color: var(--accent); background: rgba(108,99,255,.12); color: var(--accent); }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field label { font-size: .8rem; color: var(--muted); font-weight: 500; }
+.optional { font-weight: 400; opacity: .7; }
+
+.inputError { border-color: var(--danger) !important; }
+.errorMsg { font-size: .76rem; color: var(--danger); }
+.charCount { font-size: .73rem; color: var(--muted); text-align: right; margin-top: 2px; }
+
+.submitBtn {
+  width: 100%; padding: 12px; background: var(--accent); border: none;
+  border-radius: 10px; color: #fff; font-size: .95rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-top: 6px; transition: opacity .2s;
+}
+.submitBtn:hover { opacity: .9; }
+.submitBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+@media (max-width: 400px) { .row { grid-template-columns: 1fr; } }

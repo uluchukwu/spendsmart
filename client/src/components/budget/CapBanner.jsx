@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { useCurrency } from '../../context/CurrencyContext.jsx';
 import { isCurrentMonth } from '../../utils/dates.js';
 
-export default function CapBanner({ expenses, monthlyCap }) {
+export default function CapBanner({ transactions, monthlyCap }) {
   const { fmt }   = useCurrency();
   const [dismissed, setDismissed] = useState(false);
 
   if (!monthlyCap || dismissed) return null;
 
-  const totalSpent = expenses
-    .filter(e => isCurrentMonth(e.date))
-    .reduce((s, e) => s + e.amount, 0);
+  const totalSpent = (transactions || [])
+    .filter(t => t.type === 'expense' && isCurrentMonth(new Date(t.date).toISOString().slice(0, 10)))
+    .reduce((s, t) => s + t.amount, 0);
 
   const pct  = (totalSpent / monthlyCap.limit) * 100;
   if (pct < 80) return null;

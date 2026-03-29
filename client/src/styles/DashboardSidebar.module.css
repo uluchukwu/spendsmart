@@ -1,0 +1,28 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.budgetHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editBudgetBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: .78rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all .15s;
+  align-self: flex-start;
+}
+
+.editBudgetBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

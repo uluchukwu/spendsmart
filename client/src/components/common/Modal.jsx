@@ -1,58 +1,65 @@
 import { useEffect, useRef } from 'react';
+import styles from '../../styles/Modal.module.css';
 
-export default function Modal({ open, onClose, title, children, width = 480 }) {
-  const overlayRef = useRef(null);
+/**
+ * @param {{ open: boolean, onClose: () => void, title: string, children: React.ReactNode, width?: number }} props
+ */
+export default function Modal({ open, onClose, title, children, width = 500 }) {
+  const firstFocusableRef = useRef(null);
+  const overlayRef        = useRef(null);
 
-  // Close on Escape
+  // Trap focus and handle Escape key
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
 
-  // Lock body scroll
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab') return;
+
+      const focusable = overlayRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last  = focusable[focusable.length - 1];
+
+      if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    firstFocusableRef.current?.focus();
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
   return (
     <div
-      className="modal-overlay"
+      className={styles.overlay}
       ref={overlayRef}
-      onClick={e => { if (e.target === overlayRef.current) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
     >
-      <div className="modal-box" style={{ maxWidth: width }} role="dialog" aria-modal="true">
-        <div className="modal-header">
-          <h3 className="modal-title">{title}</h3>
-          <button className="btn-icon modal-close" onClick={onClose} aria-label="Close">✕</button>
+      <div className={styles.box} style={{ maxWidth: width }}>
+        <div className={styles.header}>
+          <h2 id="modal-title" className={styles.title} ref={firstFocusableRef} tabIndex={-1}>
+            {title}
+          </h2>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close modal">✕</button>
         </div>
-        <div className="modal-body">{children}</div>
+        <div className={styles.body}>{children}</div>
       </div>
-
-      <style>{`
-        .modal-overlay {
-          position: fixed; inset: 0; z-index: 500;
-          background: rgba(0,0,0,.6); backdrop-filter: blur(3px);
-          display: flex; align-items: center; justify-content: center; padding: 16px;
-        }
-        .modal-box {
-          background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
-          width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.6);
-          animation: modalIn .22s ease;
-        }
-        @keyframes modalIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
-        .modal-header {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 18px 20px 0;
-        }
-        .modal-title { font-size: 1rem; font-weight: 700; }
-        .modal-close { font-size: .9rem; }
-        .modal-body  { padding: 16px 20px 20px; }
-      `}</style>
     </div>
   );
 }

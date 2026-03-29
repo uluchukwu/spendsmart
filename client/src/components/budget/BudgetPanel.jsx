@@ -1,17 +1,20 @@
 import { useCurrency } from '../../context/CurrencyContext.jsx';
-import { CATEGORY_ICONS } from '../../utils/constants.js';
+import { CATEGORY_ICONS, CATEGORY_LABELS } from '../../utils/constants.js';
 import { isCurrentMonth } from '../../utils/dates.js';
 import { groupByCategory } from '../../utils/filters.js';
 
-export default function BudgetPanel({ expenses, budgets, monthlyCap }) {
+export default function BudgetPanel({ transactions, budgets, monthlyCap }) {
   const { fmt } = useCurrency();
 
-  const thisMonth = expenses.filter(e => isCurrentMonth(e.date));
+  // Only count expense-type transactions in the current calendar month
+  const thisMonth = (transactions || []).filter(
+    t => t.type === 'expense' && isCurrentMonth(new Date(t.date).toISOString().slice(0, 10))
+  );
   const spent     = groupByCategory(thisMonth);
   const totalSpent = thisMonth.reduce((s, e) => s + e.amount, 0);
   const capPct    = monthlyCap ? Math.min((totalSpent / monthlyCap.limit) * 100, 100) : 0;
 
-  if (!monthlyCap && budgets.length === 0) {
+  if (!monthlyCap && (!budgets || budgets.length === 0)) {
     return (
       <div className="panel">
         <div className="panel-title">Budget Goals</div>
@@ -37,7 +40,7 @@ export default function BudgetPanel({ expenses, budgets, monthlyCap }) {
               className="budget-bar-fill"
               style={{
                 width: `${capPct}%`,
-                background: capPct >= 100 ? 'var(--danger)' : capPct >= 80 ? 'var(--warn)' : 'var(--accent)',
+                background: capPct >= 100 ? 'var(--danger)' : capPct >= 80 ? 'var(--warning)' : 'var(--accent)',
               }}
             />
           </div>
@@ -51,7 +54,7 @@ export default function BudgetPanel({ expenses, budgets, monthlyCap }) {
         return (
           <div key={b.category} className="budget-cat-row">
             <div className="budget-label">
-              <span>{CATEGORY_ICONS[b.category]} {b.category}</span>
+              <span>{CATEGORY_ICONS[b.category]} {CATEGORY_LABELS[b.category] || b.category}</span>
               <span className={over ? 'budget-over' : ''}>{fmt(s)} / {fmt(b.monthlyLimit)}</span>
             </div>
             <div className="budget-bar-bg">
@@ -59,7 +62,7 @@ export default function BudgetPanel({ expenses, budgets, monthlyCap }) {
                 className="budget-bar-fill"
                 style={{
                   width: `${pct}%`,
-                  background: over ? 'var(--danger)' : pct >= 80 ? 'var(--warn)' : 'var(--accent)',
+                  background: over ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--accent)',
                 }}
               />
             </div>

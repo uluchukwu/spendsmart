@@ -59,10 +59,17 @@ const createTransaction = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: transaction });
 });
 
-// GET /api/transactions/summary
+// GET /api/transactions/summary  (optional ?startDate=&endDate= for period filtering)
 const getSummary = asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const matchFilter = { user: req.user._id };
+  if (startDate || endDate) {
+    matchFilter.date = {};
+    if (startDate) matchFilter.date.$gte = new Date(startDate);
+    if (endDate)   matchFilter.date.$lte = new Date(endDate);
+  }
   const result = await Transaction.aggregate([
-    { $match: { user: req.user._id } },
+    { $match: matchFilter },
     { $group: { _id: '$type', total: { $sum: '$amount' } } },
   ]);
 
@@ -114,7 +121,38 @@ const deleteTransaction = asyncHandler(async (req, res) => {
   res.json({ success: true, data: {} });
 });
 
+// GET /api/transactions/monthly — spending grouped by year-month
+const getMonthlyHistory = asyncHandler(async (req, res) => {
+  const result = await Transaction.aggregate([
+    { $match: { user: req.user._id } },
+    {
+      $group: {
+        _id:   { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' },
+        total: { $sum: '$amount' },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { '_id.year': -1, '_id.month': -1 } },
+  ]);
+
+  // Pivot into { month:'YYYY-MM', income, expenses, balance, count }
+  const map = {};
+  result.forEach(r => {
+    const key = `${r._id.year}-${String(r._id.month).padStart(2, '0')}`;
+    if (!map[key]) map[key] = { month: key, income: 0, expenses: 0, count: 0 };
+    if (r._id.type === 'income')  { map[key].income   = r.total; map[key].count += r.count; }
+    if (r._id.type === 'expense') { map[key].expenses = r.total; map[key].count += r.count; }
+  });
+
+  const months = Object.values(map)
+    .map(m => ({ ...m, balance: Math.round((m.income - m.expenses) * 100) / 100 }))
+    .sort((a, b) => b.month.localeCompare(a.month));
+
+  res.json({ success: true, data: months });
+});
+
 module.exports = {
   getTransactions, createTransaction, getSummary,
   getTransaction, updateTransaction, deleteTransaction,
+  getMonthlyHistory,
 };

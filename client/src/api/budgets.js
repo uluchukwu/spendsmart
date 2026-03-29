@@ -1,9 +1,21 @@
-import { apiGet, apiPost, apiDelete } from './client.js';
+import axiosInstance from './axiosInstance.js';
 
-export const getAll   = ()                           => apiGet('/budgets');
-export const upsert   = (category, monthlyLimit)     => apiPost('/budgets', { category, monthlyLimit });
-export const remove   = (category)                   => apiDelete(`/budgets/${category}`);
+// All budget API calls use axiosInstance (HTTP-only cookie auth via Vite proxy)
 
-export const getCap    = ()        => apiGet('/budgets/cap');
-export const saveCap   = (limit)   => apiPost('/budgets/cap', { limit });
-export const removeCap = ()        => apiDelete('/budgets/cap');
+export const getAll = () =>
+  axiosInstance.get('/budgets').then(r => r.data);
+
+export const upsert = (category, monthlyLimit) =>
+  axiosInstance.post('/budgets', { category, monthlyLimit }).then(r => r.data);
+
+export const remove = (category) =>
+  axiosInstance.delete(`/budgets/${category}`).then(r => r.data);
+
+export const getCap = () =>
+  axiosInstance.get('/budgets/cap').then(r => r.data);
+
+export const saveCap = (limit) =>
+  axiosInstance.post('/budgets/cap', { limit }).then(r => r.data);
+
+export const removeCap = () =>
+  axiosInstance.delete('/budgets/cap').then(r => r.data);

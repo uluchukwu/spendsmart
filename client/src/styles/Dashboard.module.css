@@ -1,0 +1,93 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+
+/* ── Page header ─────────────────────────────────────────── */
+.pageHeader   { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pageTitle    { font-size: 1.6rem; font-weight: 700; }
+.pageSubtitle { color: var(--muted); font-size: .88rem; margin-top: 2px; }
+.headerActions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.exportBtns { display: flex; gap: 6px; }
+.exportBtn {
+  background: var(--bg2); color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 14px; font-size: .8rem; font-weight: 600;
+  transition: all .15s; white-space: nowrap;
+}
+.exportBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.exportBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.addBtn {
+  background: var(--accent); color: #fff; border: none; border-radius: 10px;
+  padding: 10px 18px; font-size: .9rem; font-weight: 600;
+  transition: opacity .15s; white-space: nowrap;
+}
+.addBtn:hover { opacity: .88; }
+
+/* ── Period tabs ─────────────────────────────────────────── */
+.periodTabs { display: flex; gap: 4px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 4px; width: fit-content; }
+.periodTab {
+  background: none; border: none; border-radius: 7px;
+  color: var(--muted); font-size: .85rem; font-weight: 500;
+  padding: 6px 16px; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.periodTab:hover { color: var(--text); background: var(--bg3); }
+.activePeriodTab { background: var(--accent); color: #fff; }
+.activePeriodTab:hover { background: var(--accent); color: #fff; opacity: .9; }
+
+/* ── Summary cards ───────────────────────────────────────── */
+.summaryGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; display: flex; align-items: center; gap: 16px; }
+.incomeCard      { border-left: 3px solid var(--success); }
+.expenseCard     { border-left: 3px solid var(--accent2); }
+.balancePositive { border-left: 3px solid var(--success); }
+.balanceNegative { border-left: 3px solid var(--danger); }
+.cardIcon  { font-size: 1.8rem; flex-shrink: 0; }
+.cardBody  { display: flex; flex-direction: column; gap: 2px; }
+.cardLabel { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.cardValue { font-size: 1.4rem; font-weight: 700; }
+.incomeValue  { color: var(--success); }
+.expenseValue { color: var(--accent2); }
+
+/* ── Content grid: main col + sidebar ───────────────────── */
+.contentGrid  { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+.mainColumn   { display: flex; flex-direction: column; gap: 16px; }
+
+.chartPanel, .recentPanel {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.sectionTitle    { font-size: 1rem; font-weight: 700; }
+.sectionSubtitle { font-size: .78rem; color: var(--muted); margin-top: 2px; margin-bottom: 16px; }
+
+/* ── Expense chart ───────────────────────────────────────── */
+.chartWrap  { padding-top: 12px; }
+.chartEmpty { display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 40px 20px; color: var(--muted); text-align: center; }
+.emptyIcon  { font-size: 2.5rem; opacity: .5; }
+
+/* ── Recent transactions list ───────────────────────────── */
+.recentList  { list-style: none; display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
+.recentItem  { display: flex; align-items: center; gap: 10px; padding: 10px 8px;
+  border-radius: 9px; transition: background .12s; }
+.recentItem:hover { background: var(--bg3); }
+.recentIcon  { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; }
+.recentInfo  { flex: 1; min-width: 0; }
+.recentDesc  { display: block; font-size: .88rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recentMeta  { font-size: .74rem; color: var(--muted); }
+.recentAmount { font-weight: 700; font-size: .9rem; white-space: nowrap; flex-shrink: 0; }
+.income   { color: var(--success); }
+.expense  { color: var(--accent2); }
+.recentDelete { background: none; border: none; opacity: 0; transition: opacity .15s;
+  font-size: .9rem; padding: 4px; border-radius: 5px; cursor: pointer; }
+.recentItem:hover .recentDelete { opacity: 1; }
+.recentEmpty { display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 30px; color: var(--muted); text-align: center; }
+.viewAll { text-align: center; padding: 10px 0; }
+.viewAll button { background: none; border: none; color: var(--accent); font-size: .85rem; cursor: pointer; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) { .contentGrid { grid-template-columns: 1fr; } }
+@media (max-width: 600px)  { .summaryGrid { grid-template-columns: 1fr; } }
+@media (max-width: 480px)  { .periodTabs { flex-wrap: wrap; } }

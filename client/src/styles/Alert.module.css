@@ -1,0 +1,27 @@
+.alert {
+  position: relative; display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px 16px; border-radius: 10px; font-size: .88rem;
+  margin-bottom: 14px; overflow: hidden;
+  animation: alertIn .22s ease;
+}
+@keyframes alertIn { from { opacity:0; transform:translateY(-8px) } to { opacity:1; transform:translateY(0) } }
+
+.success { background: rgba(67,233,123,.1);  border: 1px solid rgba(67,233,123,.35); color: #43e97b; }
+.error   { background: rgba(255,71,87,.1);   border: 1px solid rgba(255,71,87,.35);  color: #ff6b78; }
+.warning { background: rgba(249,202,36,.1);  border: 1px solid rgba(249,202,36,.35); color: #f9ca24; }
+.info    { background: rgba(116,185,255,.1); border: 1px solid rgba(116,185,255,.35); color: #74b9ff; }
+
+.icon    { flex-shrink: 0; font-weight: 700; }
+.message { flex: 1; line-height: 1.4; }
+
+.close {
+  background: none; border: none; color: inherit; opacity: .6;
+  font-size: 1.1rem; padding: 0 3px; margin-left: 4px; cursor: pointer; flex-shrink: 0;
+}
+.close:hover { opacity: 1; }
+
+.progressBar {
+  position: absolute; bottom: 0; left: 0; height: 3px;
+  background: currentColor; opacity: .4;
+  transition: width 50ms linear;
+}

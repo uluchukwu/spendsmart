@@ -1,7 +1,7 @@
 const express    = require('express');
 const Budget     = require('../models/Budget');
 const MonthlyCap = require('../models/MonthlyCap');
-const protect    = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 router.use(protect);

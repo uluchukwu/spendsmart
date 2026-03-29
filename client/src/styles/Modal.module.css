@@ -1,0 +1,26 @@
+.overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.65); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+
+.box {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+  width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  animation: modalIn .22s ease;
+}
+@keyframes modalIn { from { opacity:0; transform:scale(.95) } to { opacity:1; transform:scale(1) } }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.title { font-size: 1rem; font-weight: 700; outline: none; }
+
+.closeBtn {
+  background: none; border: none; color: var(--muted);
+  font-size: .9rem; padding: 6px 8px; border-radius: 7px; transition: all .12s;
+}
+.closeBtn:hover { background: var(--bg3); color: var(--text); }
+
+.body { padding: 16px 20px 20px; }

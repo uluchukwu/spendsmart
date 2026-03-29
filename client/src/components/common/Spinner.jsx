@@ -1,8 +1,22 @@
-export default function Spinner({ size = 'md', style = {} }) {
-  const cls = size === 'sm' ? 'spinner spinner-sm' : 'spinner';
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', ...style }}>
-      <div className={cls} />
+import styles from '../../styles/Spinner.module.css';
+
+/**
+ * @param {{ fullPage?: boolean, size?: 'sm'|'md'|'lg' }} props
+ */
+export default function Spinner({ fullPage = false, size = 'md' }) {
+  const spinner = (
+    <div className={`${styles.spinner} ${styles[size]}`} role="status" aria-label="Loading">
+      <span className={styles.visuallyHidden}>Loading…</span>
     </div>
   );
+
+  if (fullPage) {
+    return (
+      <div className={styles.overlay}>
+        {spinner}
+      </div>
+    );
+  }
+
+  return spinner;
 }
