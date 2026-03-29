@@ -20,10 +20,10 @@
         <span class="brand-name">SpendSmart</span>
       </div>
 
-      <!-- Currency Toggle -->
+      <!-- Currency Selector -->
       <div class="currency-toggle">
-        <button class="cur-btn active" data-cur="GBP">£ GBP</button>
-        <button class="cur-btn"        data-cur="NGN">₦ NGN</button>
+        <span class="cur-label">🌍</span>
+        <select id="currencySelect" class="cur-select"></select>
       </div>
 
       <!-- Header right: export, budget, user menu -->
@@ -84,9 +84,9 @@
     <div class="rate-bar" id="rateBar">
       <span class="rate-icon">💱</span>
       <div class="rate-info">
-        <span class="rate-pair">1 GBP =</span>
+        <span class="rate-pair" id="rateBarFrom">1 GBP =</span>
         <span class="rate-num" id="rateValue">—</span>
-        <span class="rate-pair">NGN</span>
+        <span class="rate-pair" id="rateBarTo">—</span>
         <span class="rate-sep">·</span>
         <span class="rate-updated">
           <span class="rate-dot fetching" id="rateDot"></span>
@@ -180,10 +180,10 @@
           <h2>🔄 Quick Converter</h2>
           <div class="converter-body">
             <div class="conv-field">
-              <label class="conv-label"><span class="conv-flag">🇬🇧</span> British Pounds (£)</label>
+              <select id="convFromSelect" class="conv-cur-select"></select>
               <div class="conv-input-wrap">
-                <span class="conv-sym">£</span>
-                <input type="number" id="convGBP" placeholder="0.00" min="0" step="0.01" />
+                <span class="conv-sym" id="convFromSym">£</span>
+                <input type="number" id="convFromInput" placeholder="0.00" min="0" step="any" />
               </div>
             </div>
             <div class="conv-swap-row">
@@ -192,10 +192,10 @@
               <div class="conv-line"></div>
             </div>
             <div class="conv-field">
-              <label class="conv-label"><span class="conv-flag">🇳🇬</span> Nigerian Naira (₦)</label>
+              <select id="convToSelect" class="conv-cur-select"></select>
               <div class="conv-input-wrap">
-                <span class="conv-sym">₦</span>
-                <input type="number" id="convNGN" placeholder="0.00" min="0" step="0.01" />
+                <span class="conv-sym" id="convToSym">₦</span>
+                <input type="number" id="convToInput" placeholder="0.00" min="0" step="any" />
               </div>
             </div>
             <p class="conv-rate-note" id="convRateNote">Rate: loading…</p>

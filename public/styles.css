@@ -39,11 +39,23 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 .brand-icon { font-size:1.5rem; }
 .brand-name { font-size:1.2rem; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-.currency-toggle { display:flex; background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:3px; gap:2px; flex-shrink:0; }
-.cur-btn { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:.8rem; font-weight:600; padding:5px 12px; border-radius:7px; transition:all .2s; white-space:nowrap; }
-.cur-btn:hover { color:var(--text); }
-.cur-btn[data-cur="GBP"].active { background:var(--gbp); color:#0f1117; }
-.cur-btn[data-cur="NGN"].active { background:var(--ngn); color:#0f1117; }
+.currency-toggle { display:flex; align-items:center; background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:4px 10px; gap:7px; flex-shrink:0; }
+.cur-label { font-size:1rem; line-height:1; }
+.cur-select {
+  background:none; border:none; outline:none; color:var(--text);
+  font-size:.85rem; font-weight:600; cursor:pointer; max-width:160px;
+  font-family:var(--font);
+}
+.cur-select option { background:var(--bg2); color:var(--text); }
+
+.conv-cur-select {
+  width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+  padding:7px 10px; color:var(--text); font-size:.83rem; font-weight:600;
+  cursor:pointer; outline:none; margin-bottom:4px; font-family:var(--font);
+  transition:border-color .2s;
+}
+.conv-cur-select:focus { border-color:var(--accent); }
+.conv-cur-select option { background:var(--bg2); }
 
 .header-right { display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap; }
 .export-btns  { display:flex; gap:6px; }

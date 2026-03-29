@@ -1,22 +1,14 @@
 {
-  "name": "spendsmart",
-  "version": "2.0.0",
-  "description": "SpendSmart — Full-Stack Expense Tracker",
-  "main": "server.js",
+  "name": "spendsmart-root",
+  "version": "3.0.0",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.6.3",
-    "pdfkit": "^0.14.0"
+    "dev":    "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build":  "npm run build --prefix client",
+    "start":  "npm start --prefix server",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "concurrently": "^8.2.2"
   }
 }

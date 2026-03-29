@@ -29,11 +29,26 @@ let deleteTarget    = null;
 let chart           = null;
 let shownTips       = [];
 let displayCurrency = 'GBP';
-let gbpToNgn        = loadCachedRate();
+let rates           = loadCachedRates();
 let rateIsCustom    = false;
 let rateFetching    = false;
 let rateUpdatedAt   = null;
 
+const CURRENCIES = {
+  GBP:{ symbol:'£',  flag:'🇬🇧', name:'British Pound',      locale:'en-GB' },
+  USD:{ symbol:'$',  flag:'🇺🇸', name:'US Dollar',           locale:'en-US' },
+  EUR:{ symbol:'€',  flag:'🇪🇺', name:'Euro',                locale:'de-DE' },
+  NGN:{ symbol:'₦',  flag:'🇳🇬', name:'Nigerian Naira',      locale:'en-NG' },
+  CAD:{ symbol:'C$', flag:'🇨🇦', name:'Canadian Dollar',     locale:'en-CA' },
+  AUD:{ symbol:'A$', flag:'🇦🇺', name:'Australian Dollar',   locale:'en-AU' },
+  JPY:{ symbol:'¥',  flag:'🇯🇵', name:'Japanese Yen',        locale:'ja-JP' },
+  INR:{ symbol:'₹',  flag:'🇮🇳', name:'Indian Rupee',        locale:'en-IN' },
+  GHS:{ symbol:'₵',  flag:'🇬🇭', name:'Ghanaian Cedi',       locale:'en-GH' },
+  ZAR:{ symbol:'R',  flag:'🇿🇦', name:'South African Rand',  locale:'en-ZA' },
+  KES:{ symbol:'KSh',flag:'🇰🇪', name:'Kenyan Shilling',     locale:'en-KE' },
+  CNY:{ symbol:'¥',  flag:'🇨🇳', name:'Chinese Yuan',        locale:'zh-CN' },
+  CHF:{ symbol:'Fr', flag:'🇨🇭', name:'Swiss Franc',         locale:'de-CH' },
+};
 const CATEGORY_ICONS = { Food:'🍔', Transport:'🚗', Shopping:'🛍️', Entertainment:'🎬', Health:'💊', Bills:'⚡', Education:'📚', Others:'💼' };
 const CHART_COLORS   = { Food:'#ff6b6b', Transport:'#ffa502', Shopping:'#a29bfe', Entertainment:'#fd79a8', Health:'#00cec9', Bills:'#fdcb6e', Education:'#74b9ff', Others:'#636e72' };
 const ALL_TIPS = [
@@ -99,57 +114,95 @@ function showToast(msg, type = 'info', icon = null) {
 }
 
 // ── Rate helpers ───────────────────────────────────────────
-function loadCachedRate() {
-  try { const c=JSON.parse(localStorage.getItem('ss_rate')); if(c?.rate&&c?.ts){rateUpdatedAt=new Date(c.ts);return c.rate;} } catch {}
-  return 2050;
+// rates = { USD:1.27, EUR:1.17, NGN:2050, ... } — all relative to GBP=1
+const FALLBACK_RATES = { USD:1.27, EUR:1.17, NGN:2050, CAD:1.72, AUD:1.96, JPY:190, INR:106, GHS:19, ZAR:23, KES:164, CNY:9.2, CHF:1.12 };
+
+function loadCachedRates() {
+  try { const c=JSON.parse(localStorage.getItem('ss_rates')); if(c?.rates&&c?.ts){rateUpdatedAt=new Date(c.ts);return c.rates;} } catch {}
+  return {...FALLBACK_RATES};
 }
-function saveCachedRate(r) { localStorage.setItem('ss_rate', JSON.stringify({rate:r,ts:Date.now()})); }
+function saveCachedRates(r) { localStorage.setItem('ss_rates', JSON.stringify({rates:r,ts:Date.now()})); }
+
+// GBP-relative rate for a currency code
+function getRate(code){ if(code==='GBP')return 1; return rates[code]||1; }
 
 async function fetchLiveRate() {
   if (rateFetching) return; rateFetching=true;
-  setRateStatus('fetching','Fetching live rate…');
-  const eps = [
-    async()=>{ const j=await(await fetch('https://open.er-api.com/v6/latest/GBP')).json(); if(j.result==='success'&&j.rates?.NGN)return j.rates.NGN; throw 0; },
-    async()=>{ const j=await(await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/gbp.json')).json(); if(j.gbp?.ngn)return j.gbp.ngn; throw 0; },
-  ];
-  for(const fn of eps){try{gbpToNgn=await fn();rateIsCustom=false;rateUpdatedAt=new Date();saveCachedRate(gbpToNgn);updateRateBar();render();rateFetching=false;return;}catch{}}
+  setRateStatus('fetching','Fetching live rates…');
+  try {
+    const j=await(await fetch('https://open.er-api.com/v6/latest/GBP')).json();
+    if(j.result==='success'&&j.rates){
+      const r={};
+      Object.keys(CURRENCIES).forEach(c=>{ if(c!=='GBP'&&j.rates[c]) r[c]=j.rates[c]; });
+      rates=r; rateIsCustom=false; rateUpdatedAt=new Date(); saveCachedRates(rates);
+      updateRateBar(); render(); rateFetching=false; return;
+    }
+  } catch {}
   rateFetching=false; setRateStatus('error','Could not fetch — using cached'); updateRateBar(true);
 }
 function setRateStatus(t,m){ document.getElementById('rateDot').className='rate-dot '+t; document.getElementById('rateStatus').textContent=m; }
 function updateRateBar(err=false){
-  document.getElementById('rateValue').textContent=Number(gbpToNgn).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cur=CURRENCIES[displayCurrency]||CURRENCIES.USD;
+  const r=getRate(displayCurrency);
+  document.getElementById('rateBarFrom').textContent='1 GBP =';
+  document.getElementById('rateValue').textContent=r.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4});
+  document.getElementById('rateBarTo').textContent=displayCurrency==='GBP'?'GBP (base)':displayCurrency;
   if(rateIsCustom){setRateStatus('custom','Custom rate applied');}
   else if(!err&&rateUpdatedAt){const m=Math.round((Date.now()-rateUpdatedAt.getTime())/60000);setRateStatus('live','Live · '+(m===0?'just now':m===1?'1 min ago':m+' mins ago'));}
-  updateConverterNote();
+  updateConverter();
   if(document.getElementById('itemizedSection').classList.contains('visible'))recalcItems();
 }
 
-// ── Currency ───────────────────────────────────────────────
-function fmtGBP(n){ return '£'+Number(n).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtNGN(n){ return '₦'+Number(n).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtDisplay(g){ return displayCurrency==='NGN'?fmtNGN(g*gbpToNgn):fmtGBP(g); }
-function fmtAlt(g)    { return displayCurrency==='NGN'?fmtGBP(g):fmtNGN(g*gbpToNgn); }
+// ── Format helpers ─────────────────────────────────────────
+function fmtCur(gbpVal, code){
+  const c=CURRENCIES[code]||CURRENCIES.GBP;
+  const val=gbpVal*getRate(code);
+  const decimals=code==='JPY'?0:2;
+  return c.symbol+val.toLocaleString(c.locale,{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+}
+// Keep fmtGBP / fmtNGN for backward compat (budget alerts etc.)
+function fmtGBP(n){ return fmtCur(n,'GBP'); }
+function fmtNGN(n){ return CURRENCIES.NGN.symbol+Number(n).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDisplay(gbpVal){ return fmtCur(gbpVal, displayCurrency); }
+function fmtAlt(gbpVal){
+  // show GBP if display isn't GBP, else show USD
+  const altCode=displayCurrency==='GBP'?'USD':'GBP';
+  return fmtCur(gbpVal,altCode);
+}
 
-document.querySelectorAll('.cur-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    if(b.dataset.cur===displayCurrency)return;
-    document.querySelectorAll('.cur-btn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active'); displayCurrency=b.dataset.cur; render();
+// ── Currency selector (header) ─────────────────────────────
+function buildCurrencySelect(){
+  const sel=document.getElementById('currencySelect');
+  sel.innerHTML=Object.entries(CURRENCIES).map(([code,c])=>
+    `<option value="${code}">${c.flag} ${code} — ${c.name}</option>`
+  ).join('');
+  sel.value=displayCurrency;
+  sel.addEventListener('change',()=>{
+    displayCurrency=sel.value;
+    updateRateBar(); render();
   });
-});
+}
+
 document.getElementById('refreshRateBtn').addEventListener('click',()=>{rateIsCustom=false;fetchLiveRate();});
 
 // ── Rate bar custom modal ──────────────────────────────────
 const customRateOverlay = document.getElementById('customRateOverlay');
-document.getElementById('customRateBtn').addEventListener('click',()=>{ document.getElementById('customRateInput').value=gbpToNgn.toFixed(2); customRateOverlay.classList.add('open'); document.getElementById('customRateInput').focus(); });
+document.getElementById('customRateBtn').addEventListener('click',()=>{
+  const r=getRate(displayCurrency);
+  document.getElementById('customRateLabel').textContent=`1 GBP = ? ${displayCurrency}`;
+  document.getElementById('customRateInput').value=r.toFixed(4);
+  customRateOverlay.classList.add('open');
+  document.getElementById('customRateInput').focus();
+});
 document.getElementById('closeCustomRateBtn').addEventListener('click',()=>customRateOverlay.classList.remove('open'));
 document.getElementById('cancelCustomRateBtn').addEventListener('click',()=>customRateOverlay.classList.remove('open'));
 customRateOverlay.addEventListener('click',e=>{if(e.target===customRateOverlay)customRateOverlay.classList.remove('open');});
 document.getElementById('applyCustomRateBtn').addEventListener('click',()=>{
   const v=parseFloat(document.getElementById('customRateInput').value);
   if(isNaN(v)||v<=0){showToast('Enter a valid rate.','error');return;}
-  gbpToNgn=v;rateIsCustom=true;updateRateBar();render();customRateOverlay.classList.remove('open');
-  showToast(`Custom rate set: 1 GBP = ₦${v.toLocaleString()}`, 'info', '💱');
+  if(displayCurrency!=='GBP') rates[displayCurrency]=v;
+  rateIsCustom=true; updateRateBar(); render(); customRateOverlay.classList.remove('open');
+  showToast(`Custom rate: 1 GBP = ${v} ${displayCurrency}`,'info','💱');
 });
 document.getElementById('restoreLiveRateBtn').addEventListener('click',()=>{customRateOverlay.classList.remove('open');rateIsCustom=false;fetchLiveRate();});
 
@@ -209,10 +262,17 @@ function updateSummary(list){
 function updateChart(list){
   const canvas=document.getElementById('categoryChart'),empty=document.getElementById('chartEmpty');
   const totals={}; list.forEach(e=>{totals[e.category]=(totals[e.category]||0)+e.amount;});
-  const labels=Object.keys(totals), data=Object.values(totals).map(v=>displayCurrency==='NGN'?v*gbpToNgn:v);
-  if(!labels.length){canvas.style.display='none';empty.style.display='block';if(chart){chart.destroy();chart=null;}return;}
+  const labels=Object.keys(totals), data=Object.values(totals).map(v=>v*getRate(displayCurrency));
+  if(!labels.length){
+    canvas.style.display='none';empty.style.display='block';
+    if(chart){chart.destroy();chart=null;}
+    empty.textContent=expenses.length===0
+      ?'Add your first expense to see the category breakdown'
+      :'No expenses in this period';
+    return;
+  }
   canvas.style.display='block';empty.style.display='none';
-  const sym=displayCurrency==='GBP'?'£':'₦',tot=data.reduce((a,b)=>a+b,0);
+  const sym=(CURRENCIES[displayCurrency]||CURRENCIES.GBP).symbol,tot=data.reduce((a,b)=>a+b,0);
   if(chart)chart.destroy();
   chart=new Chart(canvas,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:labels.map(l=>CHART_COLORS[l]||'#636e72'),borderWidth:2,borderColor:'#1a1d27',hoverOffset:6}]},options:{cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:'#8b90b8',font:{size:11},padding:10,boxWidth:12,boxHeight:12}},tooltip:{callbacks:{label:c=>' '+sym+Number(c.raw).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})+' ('+Math.round(c.raw/tot*100)+'%)'}}}}});
 }
@@ -406,7 +466,7 @@ function createItemRow(name='',qty=1,price=''){
   return row;
 }
 function updateRowSubtotal(row){const q=parseFloat(row.querySelector('.item-qty').value)||0,p=parseFloat(row.querySelector('.item-price').value)||0;row.querySelector('.item-sub').textContent=fmtGBP(q*p);}
-function recalcItems(){let t=0;document.querySelectorAll('#itemRowsContainer .item-row').forEach(r=>{const q=parseFloat(r.querySelector('.item-qty').value)||0,p=parseFloat(r.querySelector('.item-price').value)||0,s=q*p;t+=s;r.querySelector('.item-sub').textContent=fmtGBP(s);});document.getElementById('itemsGrandTotal').textContent=fmtGBP(t);document.getElementById('itemsGrandTotalNgn').textContent='≈ '+fmtNGN(t*gbpToNgn);}
+function recalcItems(){let t=0;document.querySelectorAll('#itemRowsContainer .item-row').forEach(r=>{const q=parseFloat(r.querySelector('.item-qty').value)||0,p=parseFloat(r.querySelector('.item-price').value)||0,s=q*p;t+=s;r.querySelector('.item-sub').textContent=fmtGBP(s);});document.getElementById('itemsGrandTotal').textContent=fmtGBP(t);const altCode=displayCurrency==='GBP'?'USD':displayCurrency;document.getElementById('itemsGrandTotalNgn').textContent='≈ '+fmtCur(t,altCode);}
 function addBlankItemRow(){document.getElementById('itemRowsContainer').appendChild(createItemRow());}
 function collectItems(){const items=[];document.querySelectorAll('#itemRowsContainer .item-row').forEach(r=>{const n=r.querySelector('.item-name').value.trim(),q=parseFloat(r.querySelector('.item-qty').value)||1,p=parseFloat(r.querySelector('.item-price').value)||0;if(p>0)items.push({name:n||'Item',qty:q,price:p});});return items;}
 function clearItemRows(){document.getElementById('itemRowsContainer').innerHTML='';document.getElementById('itemsGrandTotal').textContent='£0.00';document.getElementById('itemsGrandTotalNgn').textContent='≈ ₦0.00';}
@@ -454,7 +514,7 @@ modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal(
 function openEdit(id){openModal(id);}
 
 document.getElementById('amount').addEventListener('input',()=>{const v=parseFloat(document.getElementById('amount').value);updateAmountConverted(isNaN(v)?0:v);});
-function updateAmountConverted(v){const el=document.getElementById('amountConverted');if(!v||v<=0){el.textContent='';return;}el.textContent='≈ '+fmtNGN(v*gbpToNgn)+' at current rate';}
+function updateAmountConverted(v){const el=document.getElementById('amountConverted');if(!v||v<=0){el.textContent='';return;}const altCode=displayCurrency==='GBP'?'USD':displayCurrency;el.textContent='≈ '+fmtCur(v,altCode)+' at current rate';}
 
 expenseForm.addEventListener('submit',async e=>{
   e.preventDefault();
@@ -510,7 +570,7 @@ function openDetail(id){
   document.getElementById('detailItemsSection').style.display=hasItems?'block':'none';
   document.getElementById('detailSimpleSection').style.display=hasItems?'none':'block';
   if(hasItems){
-    const sym=displayCurrency==='GBP'?'£':'₦',conv=displayCurrency==='GBP'?1:gbpToNgn;
+    const sym=(CURRENCIES[displayCurrency]||CURRENCIES.GBP).symbol,conv=getRate(displayCurrency);
     document.getElementById('detailItemsBody').innerHTML=e.items.map(i=>`<tr><td class="di-name">${escHtml(i.name||'—')}</td><td class="di-qty">${i.qty}</td><td class="di-price">${sym}${(i.price*conv).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td class="di-sub">${sym}${(i.qty*i.price*conv).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`).join('');
     document.getElementById('detailItemCount').textContent=e.items.length+' item'+(e.items.length!==1?'s':'');
     document.getElementById('detailTotal').textContent=fmtDisplay(e.amount);
@@ -654,13 +714,80 @@ document.getElementById('exportPdfBtn').addEventListener('click',async()=>{
 });
 
 // ══════════════════════════════════════════════════════════
-// QUICK CONVERTER
+// QUICK CONVERTER (multi-currency)
 // ══════════════════════════════════════════════════════════
-const cGBP=document.getElementById('convGBP'),cNGN=document.getElementById('convNGN');
-cGBP.addEventListener('input',()=>{const v=parseFloat(cGBP.value);cNGN.value=isNaN(v)?'':(v*gbpToNgn).toFixed(2);});
-cNGN.addEventListener('input',()=>{const v=parseFloat(cNGN.value);cGBP.value=isNaN(v)||gbpToNgn<=0?'':(v/gbpToNgn).toFixed(2);});
-document.getElementById('convSwapBtn').addEventListener('click',()=>{const g=cGBP.value,n=cNGN.value;cGBP.value=n?(parseFloat(n)/gbpToNgn).toFixed(2):'';cNGN.value=g?(parseFloat(g)*gbpToNgn).toFixed(2):'';});
-function updateConverterNote(){const el=document.getElementById('convRateNote');el.textContent=`1 £ = ₦${Number(gbpToNgn).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2})}  ·  1 ₦ = £${(1/gbpToNgn).toFixed(6)}`;const g=parseFloat(cGBP.value);if(!isNaN(g)&&cGBP.value)cNGN.value=(g*gbpToNgn).toFixed(2);}
+let convFromCode='GBP', convToCode='NGN';
+
+function buildConverterSelects(){
+  ['convFromSelect','convToSelect'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML=Object.entries(CURRENCIES).map(([code,c])=>
+      `<option value="${code}">${c.flag} ${code}</option>`
+    ).join('');
+  });
+  document.getElementById('convFromSelect').value=convFromCode;
+  document.getElementById('convToSelect').value=convToCode;
+  syncConverterLabels();
+}
+
+function syncConverterLabels(){
+  const from=CURRENCIES[convFromCode]||CURRENCIES.GBP;
+  const to=CURRENCIES[convToCode]||CURRENCIES.NGN;
+  document.getElementById('convFromSym').textContent=from.symbol;
+  document.getElementById('convToSym').textContent=to.symbol;
+}
+
+function convFromToGBP(val,code){ return code==='GBP'?val:val/getRate(code); }
+function convGBPTo(val,code){ return code==='GBP'?val:val*getRate(code); }
+
+function updateConverter(){
+  syncConverterLabels();
+  const fromInput=document.getElementById('convFromInput');
+  const toInput=document.getElementById('convToInput');
+  const v=parseFloat(fromInput.value);
+  if(!isNaN(v)&&fromInput.value!==''){
+    const gbp=convFromToGBP(v,convFromCode);
+    const decimals=convToCode==='JPY'?0:4;
+    toInput.value=convGBPTo(gbp,convToCode).toFixed(decimals);
+  }
+  const rFrom=getRate(convFromCode), rTo=getRate(convToCode);
+  const crossRate=rTo/rFrom;
+  const sym1=(CURRENCIES[convFromCode]||CURRENCIES.GBP).symbol;
+  const sym2=(CURRENCIES[convToCode]||CURRENCIES.NGN).symbol;
+  document.getElementById('convRateNote').textContent=
+    `1 ${convFromCode} = ${crossRate.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4})} ${convToCode}  ·  1 ${convToCode} = ${(1/crossRate).toFixed(6)} ${convFromCode}`;
+}
+
+document.getElementById('convFromSelect').addEventListener('change',e=>{
+  convFromCode=e.target.value; updateConverter();
+});
+document.getElementById('convToSelect').addEventListener('change',e=>{
+  convToCode=e.target.value; updateConverter();
+});
+document.getElementById('convFromInput').addEventListener('input',()=>{
+  const v=parseFloat(document.getElementById('convFromInput').value);
+  if(isNaN(v)){document.getElementById('convToInput').value='';return;}
+  const gbp=convFromToGBP(v,convFromCode);
+  const decimals=convToCode==='JPY'?0:4;
+  document.getElementById('convToInput').value=convGBPTo(gbp,convToCode).toFixed(decimals);
+});
+document.getElementById('convToInput').addEventListener('input',()=>{
+  const v=parseFloat(document.getElementById('convToInput').value);
+  if(isNaN(v)){document.getElementById('convFromInput').value='';return;}
+  const gbp=convFromToGBP(v,convToCode);
+  const decimals=convFromCode==='JPY'?0:4;
+  document.getElementById('convFromInput').value=convGBPTo(gbp,convFromCode).toFixed(decimals);
+});
+document.getElementById('convSwapBtn').addEventListener('click',()=>{
+  [convFromCode,convToCode]=[convToCode,convFromCode];
+  document.getElementById('convFromSelect').value=convFromCode;
+  document.getElementById('convToSelect').value=convToCode;
+  const a=document.getElementById('convFromInput').value;
+  const b=document.getElementById('convToInput').value;
+  document.getElementById('convFromInput').value=b;
+  document.getElementById('convToInput').value=a;
+  updateConverter();
+});
 
 // ══════════════════════════════════════════════════════════
 // TIPS
@@ -686,6 +813,8 @@ setInterval(()=>{if(!rateIsCustom)fetchLiveRate();},30*60*1000);
 // ══════════════════════════════════════════════════════════
 (async()=>{
   initUser();
+  buildCurrencySelect();
+  buildConverterSelects();
   fetchLiveRate();
   updateRateBar();
   await Promise.all([loadExpenses(),loadBudgets(),loadMonthlyCap()]);
