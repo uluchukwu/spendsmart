@@ -1,6 +1,9 @@
-const dotenv    = require('dotenv');
-const path      = require('path');
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// Load .env only in development — in production (Render) env vars are injected by the platform
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = require('dotenv');
+  const path   = require('path');
+  dotenv.config({ path: path.join(__dirname, '../.env') });
+}
 
 // ── Validate required env vars before anything else ────────
 const REQUIRED_ENV = ['MONGO_URI', 'JWT_SECRET'];
