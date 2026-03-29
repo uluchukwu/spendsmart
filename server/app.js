@@ -55,6 +55,10 @@ app.use('/api/auth',         authLimiter, authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/budgets',      budgetRoutes);
 
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'API is healthy' });
+});
+
 // ── Serve React frontend in production ────────────────────
 if (process.env.NODE_ENV === 'production') {
   const clientBuild = path.join(__dirname, '../client/dist');

@@ -17,7 +17,7 @@ const connectDB = require('./config/db');
 const app       = require('./app');
 
 const PORT = process.env.PORT || 5000;
-
+console.log(process.env.NODE_ENV);
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
