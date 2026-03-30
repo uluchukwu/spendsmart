@@ -4,7 +4,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { CATEGORY_LABELS } from '../../utils/constants.js';
 import { getCategoryChartColors } from '../../utils/categoryColors.js';
 import { formatCurrency } from '../../utils/formatCurrency.js';
-import { useAuth } from '../../hooks/useAuth.js';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 import styles from '../../styles/Dashboard.module.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -13,8 +13,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
  * @param {{ transactions: Array }} props — filtered to expenses for last 30 days
  */
 export default function ExpenseChart({ transactions }) {
-  const { user } = useAuth();
-  const currency  = user?.currency || 'GBP';
+  const { displayCurrency: currency } = useCurrency();
 
   const chartData = useMemo(() => {
     const thirtyDaysAgo = new Date();

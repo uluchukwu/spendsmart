@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: '/dashboard',    icon: '📊', label: 'Dashboard'       },
   { to: '/transactions', icon: '💸', label: 'Transactions'    },
   { to: '/history',      icon: '📅', label: 'Monthly History' },
+  { to: '/settings',     icon: '⚙️',  label: 'Settings'        },
 ];
 
 export default function Sidebar() {

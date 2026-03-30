@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate }         from 'react-router-dom';
 import { fetchMonthlyHistory } from '../api/transactionApi.js';
 import { formatCurrency }      from '../utils/formatCurrency.js';
-import { useAuth }             from '../hooks/useAuth.js';
+import { useCurrency }         from '../context/CurrencyContext.jsx';
 import Spinner                 from '../components/common/Spinner.jsx';
 import styles                  from '../styles/MonthlyHistory.module.css';
 
@@ -17,9 +17,8 @@ function formatMonthLabel(yearMonth) {
 }
 
 export default function MonthlyHistory() {
-  const { user }   = useAuth();
   const navigate   = useNavigate();
-  const currency   = user?.currency || 'GBP';
+  const { displayCurrency: currency } = useCurrency();
 
   const [months,  setMonths]  = useState([]);
   const [loading, setLoading] = useState(true);

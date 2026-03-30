@@ -2,16 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import { CATEGORY_ICONS, CATEGORY_LABELS } from '../../utils/constants.js';
 import { formatCurrency } from '../../utils/formatCurrency.js';
 import { formatDate } from '../../utils/formatDate.js';
-import { useAuth } from '../../hooks/useAuth.js';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 import styles from '../../styles/Dashboard.module.css';
 
 /**
  * @param {{ transactions: Array, onDelete: (id: string) => void }} props
  */
 export default function RecentTransactions({ transactions, onDelete }) {
-  const { user }  = useAuth();
   const navigate  = useNavigate();
-  const currency  = user?.currency || 'GBP';
+  const { displayCurrency: currency } = useCurrency();
   const recent    = transactions.slice(0, 5);
 
   if (recent.length === 0) {

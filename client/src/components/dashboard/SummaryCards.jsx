@@ -1,13 +1,12 @@
-import { useAuth } from '../../hooks/useAuth.js';
 import { formatCurrency } from '../../utils/formatCurrency.js';
+import { useCurrency }    from '../../context/CurrencyContext.jsx';
 import styles from '../../styles/Dashboard.module.css';
 
 /**
  * @param {{ summary: { totalIncome: number, totalExpenses: number, balance: number } }} props
  */
 export default function SummaryCards({ summary }) {
-  const { user } = useAuth();
-  const currency = user?.currency || 'GBP';
+  const { displayCurrency: currency } = useCurrency();
 
   const { totalIncome = 0, totalExpenses = 0, balance = 0 } = summary || {};
   const isPositive = balance >= 0;

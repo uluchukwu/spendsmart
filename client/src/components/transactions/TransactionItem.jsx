@@ -1,7 +1,7 @@
 import { CATEGORY_ICONS, CATEGORY_LABELS } from '../../utils/constants.js';
 import { formatCurrency } from '../../utils/formatCurrency.js';
 import { formatDate } from '../../utils/formatDate.js';
-import { useAuth } from '../../hooks/useAuth.js';
+import { useCurrency } from '../../context/CurrencyContext.jsx';
 import styles from '../../styles/TransactionItem.module.css';
 
 /**
@@ -12,8 +12,7 @@ import styles from '../../styles/TransactionItem.module.css';
  * }} props
  */
 export default function TransactionItem({ transaction: t, onEdit, onDelete }) {
-  const { user }  = useAuth();
-  const currency   = user?.currency || 'GBP';
+  const { displayCurrency: currency } = useCurrency();
   const isIncome   = t.type === 'income';
   const icon       = CATEGORY_ICONS[t.category] || '📦';
   const catLabel   = CATEGORY_LABELS[t.category] || t.category;

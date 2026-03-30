@@ -9,6 +9,9 @@ import Footer                  from './components/layout/Footer.jsx';
 import Dashboard               from './pages/Dashboard.jsx';
 import Transactions            from './pages/Transactions.jsx';
 import MonthlyHistory          from './pages/MonthlyHistory.jsx';
+import Settings                from './pages/Settings.jsx';
+import ForgotPassword          from './pages/ForgotPassword.jsx';
+import ResetPassword           from './pages/ResetPassword.jsx';
 import Login                   from './pages/Login.jsx';
 import Register                from './pages/Register.jsx';
 import NotFound                from './pages/NotFound.jsx';
@@ -44,8 +47,10 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<RootRedirect />} />
 
-                <Route path="/login"    element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route path="/login"              element={<Login />} />
+                <Route path="/register"          element={<Register />} />
+                <Route path="/forgot-password"   element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
 
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
@@ -62,6 +67,12 @@ export default function App() {
                 <Route path="/history" element={
                   <ProtectedRoute>
                     <AppLayout><MonthlyHistory /></AppLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <AppLayout><Settings /></AppLayout>
                   </ProtectedRoute>
                 } />
 
