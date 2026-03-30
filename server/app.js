@@ -21,6 +21,12 @@ app.use(helmet({
       scriptSrc:  ["'self'", "'unsafe-inline'"],
       styleSrc:   ["'self'", "'unsafe-inline'"],
       imgSrc:     ["'self'", 'data:', 'blob:'],
+      // Allow fetch() to external exchange-rate APIs used by the currency converter
+      connectSrc: [
+        "'self'",
+        'https://open.er-api.com',
+        'https://cdn.jsdelivr.net',
+      ],
     },
   },
 }));
