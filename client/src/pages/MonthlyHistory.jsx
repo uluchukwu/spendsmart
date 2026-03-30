@@ -26,8 +26,10 @@ export default function MonthlyHistory() {
   const [error,   setError]   = useState(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetchMonthlyHistory()
-      .then(data => { setMonths(data); setLoading(false); })
+      .then(data => { setMonths(data); setError(null); setLoading(false); })
       .catch(err  => { setError(err.message); setLoading(false); });
   }, []);
 
