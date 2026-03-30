@@ -33,3 +33,22 @@ export const getMe = async () => {
   const res = await axiosInstance.get('/auth/me');
   return res.data.data;
 };
+
+/**
+ * Request a password-reset email.
+ * Always resolves (server doesn't reveal whether email exists).
+ * @param {{ email: string }} data
+ */
+export const forgotPassword = async (data) => {
+  const res = await axiosInstance.post('/auth/forgot-password', data);
+  return res.data;
+};
+
+/**
+ * Submit a new password using the token from the reset email.
+ * @param {{ token: string, password: string }} data
+ */
+export const resetPassword = async ({ token, password }) => {
+  const res = await axiosInstance.put(`/auth/reset-password/${token}`, { password });
+  return res.data.data;
+};

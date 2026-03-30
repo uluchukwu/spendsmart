@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt   = require('bcryptjs');
+const crypto   = require('crypto');
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -18,8 +19,11 @@ const UserSchema = new mongoose.Schema({
   },
   currency: {
     type: String, default: 'GBP',
-    enum: ['GBP', 'USD', 'EUR', 'NGN', 'CAD', 'AUD'],
   },
+  // ── Password reset ────────────────────────────────────────
+  resetPasswordToken:  { type: String,  select: false },
+  resetPasswordExpire: { type: Date,    select: false },
+
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -33,6 +37,21 @@ UserSchema.pre('save', async function (next) {
 // Compare candidate password with stored hash
 UserSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+/**
+ * Generates a plain-text reset token, stores its SHA-256 hash + a 30-min
+ * expiry on the document, and returns the PLAIN token (to be emailed).
+ * Call user.save() after this.
+ */
+UserSchema.methods.getResetPasswordToken = function () {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+
+  // Store the hashed version — never persist plain tokens to the DB
+  this.resetPasswordToken  = crypto.createHash('sha256').update(rawToken).digest('hex');
+  this.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
+
+  return rawToken; // send this in the email
 };
 
 module.exports = mongoose.model('User', UserSchema);

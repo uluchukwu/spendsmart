@@ -55,7 +55,10 @@ export default function LoginForm() {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="password">Password</label>
+          <div className={styles.labelRow}>
+            <label htmlFor="password">Password</label>
+            <Link to="/forgot-password" className={styles.forgotLink}>Forgot password?</Link>
+          </div>
           <div className={styles.pwWrap}>
             <input
               id="password" type={showPw ? 'text' : 'password'}
