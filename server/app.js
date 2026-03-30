@@ -25,8 +25,11 @@ app.use(helmet({
   },
 }));
 
+// In production the React app is served from the same Express origin,
+// so CORS isn't needed for the frontend itself.  We still configure it
+// in case you ever call the API from an external client.
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.CLIENT_ORIGIN]
+  ? (process.env.CLIENT_ORIGIN ? [process.env.CLIENT_ORIGIN] : false)
   : [/^http:\/\/localhost:\d+$/];   // allow ANY localhost port in development
 
 app.use(cors({
@@ -55,7 +58,8 @@ app.use('/api/auth',         authLimiter, authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/budgets',      budgetRoutes);
 
-app.get('/', (req, res) => {
+// Health-check (useful for monitoring — does NOT clash with React root)
+app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'API is healthy' });
 });
 
