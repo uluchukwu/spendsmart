@@ -3,10 +3,11 @@
   "version": "3.0.0",
   "private": true,
   "scripts": {
-    "install:all": "npm i && cd client && npm i && cd ../server && npm i",
-    "dev":   "concurrently -n server,client -c blue,green \"cd server && npm run dev\" \"cd client && npm run dev\"",
-    "build": "cd client && npm run build",
-    "start": "cd server && npm start"
+    "install:all":  "npm i && cd client && npm i && cd ../server && npm i",
+    "dev":          "concurrently -n server,client -c blue,green \"cd server && npm run dev\" \"cd client && npm run dev\"",
+    "build":        "cd client && npm run build",
+    "build:render": "cd client && npm install && npm run build && cd ../server && npm install",
+    "start":        "cd server && node server.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
